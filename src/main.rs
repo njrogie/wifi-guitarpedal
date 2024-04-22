@@ -2,15 +2,14 @@
 #![no_main]
 
 use embedded_graphics::{
-    pixelcolor::BinaryColor,
-    draw_target::DrawTarget,
-    primitives::{
-        Circle,
-        PrimitiveStyle,
-        Primitive
-    },
-    Drawable,
-    geometry::Point
+    draw_target::DrawTarget, geometry::{Point, Size}, mono_font::{
+        iso_8859_10::FONT_6X10,
+        MonoTextStyleBuilder,
+    }, pixelcolor::BinaryColor, primitives::{
+        Primitive,  
+        PrimitiveStyleBuilder, 
+        Rectangle
+    }, text::Text, Drawable
 };
 
 use esp_backtrace as _;
@@ -19,20 +18,62 @@ use ssd1306::prelude::*;
 
 mod esp32wroom32;
 use esp32wroom32::ESP32WROOM32LCDBoardUtils as BoardUtils;
+use wifi_guitarpedal::convert_adc_to_str;
 
 #[entry]
-fn main() -> ! {
+fn main() -> ! { 
     let peripherals = Peripherals::take();
-    let utils = BoardUtils::new(peripherals);
+    let mut utils = BoardUtils::new(peripherals);
 
     // initialize the display
     let mut display = esp32wroom32::get_display(utils.i2c);
     display.init().unwrap();
+    let _ = display.set_rotation(DisplayRotation::Rotate180);
 
+    let style = PrimitiveStyleBuilder::new()
+        .stroke_width(1)
+        .stroke_color(BinaryColor::On)
+        .build();
+    
+    let text_style = MonoTextStyleBuilder::new()
+        .font(&FONT_6X10)
+        .text_color(BinaryColor::On)
+        .build();
     // initialize wifi
-
-
     loop {
-     
+        Rectangle::new(Point::new(0, 0), Size::new(127, 63))
+            .into_styled(style)
+            .draw(&mut display)
+            .unwrap();
+        
+        let read = utils.adc.read(&mut utils.adc_pin);
+        match read {
+            Ok(it) => {
+                let it = 4095 - it;
+                let mut buffer = heapless::Vec::<u8, 5>::from_slice(b"00000").unwrap();
+                let ch: u8 = (it % 10) as u8;
+                buffer[4] = ch + '0' as u8;
+                let ch = ((it / 10) % 10) as u8;
+                buffer[3] = ch + '0' as u8;
+                let ch = ((it / 10 / 10) % 10) as u8;
+                buffer[2] = ch + '0' as u8;
+                let ch = ((it / 10 / 10 / 10) % 10) as u8;
+                buffer[1] = ch + '0' as u8;
+                let ch = ((it / 10 / 10 / 10 / 10) % 10) as u8;
+                buffer[0] = ch + '0' as u8;
+
+                let buffer = convert_adc_to_str(it);
+                Text::with_alignment(&buffer, Point::new(63,32), text_style, embedded_graphics::text::Alignment::Center)
+                    .draw(&mut display)
+                    .unwrap();
+                let _ = display.flush();
+                let _ = display.clear(BinaryColor::Off);
+            }
+            Err(_) => {
+
+            }
+        }
+        
+        utils.delay.delay_ms(20 as u32);
     }
 }
