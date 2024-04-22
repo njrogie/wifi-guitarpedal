@@ -50,18 +50,6 @@ fn main() -> ! {
         match read {
             Ok(it) => {
                 let it = 4095 - it;
-                let mut buffer = heapless::Vec::<u8, 5>::from_slice(b"00000").unwrap();
-                let ch: u8 = (it % 10) as u8;
-                buffer[4] = ch + '0' as u8;
-                let ch = ((it / 10) % 10) as u8;
-                buffer[3] = ch + '0' as u8;
-                let ch = ((it / 10 / 10) % 10) as u8;
-                buffer[2] = ch + '0' as u8;
-                let ch = ((it / 10 / 10 / 10) % 10) as u8;
-                buffer[1] = ch + '0' as u8;
-                let ch = ((it / 10 / 10 / 10 / 10) % 10) as u8;
-                buffer[0] = ch + '0' as u8;
-
                 let buffer = convert_adc_to_str(it);
                 Text::with_alignment(&buffer, Point::new(63,32), text_style, embedded_graphics::text::Alignment::Center)
                     .draw(&mut display)
@@ -73,7 +61,5 @@ fn main() -> ! {
 
             }
         }
-        
-        utils.delay.delay_ms(20 as u32);
     }
 }
