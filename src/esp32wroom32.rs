@@ -18,7 +18,7 @@ pub struct ESP32WROOM32LCDBoardUtils {
     pub delay: Delay,
     pub wifi: WIFI,
     pub adc: ADC<'static, ADC2>,
-    pub adc_pin: AdcPin<GpioPin<Analog,2>, ADC2>,
+    pub adc_pin: AdcPin<GpioPin<Analog, 2>, ADC2>,
 }
 
 impl ESP32WROOM32LCDBoardUtils {
@@ -45,7 +45,7 @@ impl ESP32WROOM32LCDBoardUtils {
         ESP32WROOM32LCDBoardUtils {
             i2c: i2c,
             delay: delay,
-            wifi: wifi, 
+            wifi: wifi,
             adc: adc,
             adc_pin: inp_pin,
         }
